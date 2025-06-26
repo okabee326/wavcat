@@ -15,6 +15,7 @@ int main(int argc, char *argv[])
     int option_divide = 0;
     int option_cat = 0;
     int option_test = 0;
+    int option_verification = 0;
 
     int divide_num = 0;
     int cat_num = 0;
@@ -68,6 +69,19 @@ int main(int argc, char *argv[])
 
             continue;
         }
+
+        if(strcmp(argv[i], "--veri") == 0){
+            if (i + 1 != argc)
+            {
+                divide_num = atoi(argv[i + 1]);
+
+                option_verification = 1;
+
+                i++;
+            }
+
+            continue;
+        }
     }
 
     if (infile == NULL)
@@ -89,7 +103,7 @@ int main(int argc, char *argv[])
         return RUN_ALL_TESTS();
     }
 
-    if (option_divide == 1 || option_cat == 1)
+    if (option_divide == 1 || option_cat == 1 || option_verification == 1)
     {
         // divide mode
         if (divide_num == 0)
@@ -134,8 +148,9 @@ int main(int argc, char *argv[])
     // create buffer
     double **in;
     double **out;
+    double **v_out;
 
-    if (option_divide == 1)
+    if (option_divide == 1 || option_verification == 1)
     {
         divider = new WaveDivider(divide_num, samples, channels);
         divider->Calc();
@@ -145,6 +160,13 @@ int main(int argc, char *argv[])
         // input buffer
         in = WaveReader::CreateBuffer(channels, samples);
         out = WaveReader::CreateBuffer(out_channels, out_samples);
+
+        if(option_verification == 1){
+            v_out = WaveReader::CreateBuffer(channels, samples+1);
+
+            catenater = new WaveCatenater(divide_num, out_samples, out_channels);
+            catenater->Calc();
+        }
     }
 
     if(option_cat == 1){
@@ -183,12 +205,16 @@ int main(int argc, char *argv[])
     }
 
     // process
-    if(option_divide == 1){
+    if(option_divide == 1 || option_verification == 1){
         divider->Divide(in, out);
     }
     
     if(option_cat == 1){
         catenater->Catenate(in, out);
+    }
+
+    if(option_verification == 1){
+        catenater->Catenate(out, v_out);
     }
 
     // write buffer
@@ -199,8 +225,6 @@ int main(int argc, char *argv[])
     write_format.freq = reader->GetFreq();
     write_format.samples = out_samples;
     write_format.type = 3; // float
-
-    printf("freq: %d\n", write_format.freq);
 
     int64_t write_datalen = 8 * out_channels * out_samples;
     write_format.datalen = write_datalen;
@@ -226,6 +250,13 @@ int main(int argc, char *argv[])
         }
     }
 
+    // verification mode
+    if(option_verification == 1){
+        for(int i=0;i<100;i++){
+            printf("%3.14f, %3.14f\n", in[0][samples/2+i*100-100], v_out[0][samples/2 + i*100-100]);
+        }
+    }
+
     delete reader;
     delete writer;
 
@@ -238,7 +269,7 @@ int main(int argc, char *argv[])
     */
 
     // release memory
-    if (option_divide == 1)
+    if (option_divide == 1 || option_verification == 1)
     {
         delete divider;
         WaveReader::FreeBuffer(channels, in);
@@ -249,6 +280,11 @@ int main(int argc, char *argv[])
         delete catenater;
         WaveReader::FreeBuffer(channels, in);
         WaveReader::FreeBuffer(out_channels, out);
+    }
+
+    if(option_verification == 1){
+        delete catenater;
+        WaveReader::FreeBuffer(channels, v_out);
     }
 
     return code;
