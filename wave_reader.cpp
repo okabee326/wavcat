@@ -113,6 +113,10 @@ int64_t WaveReader::GetBytePerSample(){
     return format.bytepersample;
 }
 
+int WaveReader::GetFreq(){
+    return format.freq;
+}
+
 double** WaveReader::CreateBuffer(int ch, int64_t size){
     double** out = (double **)malloc(sizeof(double *) * ch);
     for (int i = 0; i < ch; i++)

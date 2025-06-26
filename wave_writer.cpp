@@ -9,7 +9,7 @@ WaveWriter::WaveWriter(std::string filename, WaveFormat _format, int64_t _blocks
 
     if (wf == NULL)
     {
-        printf("file open error.\n");
+        printf("write file open error.\n");
     }
 }
 
@@ -27,6 +27,11 @@ int64_t WaveWriter::WriteHeader()
     int channels = format.channels;
     int outsampling = format.freq;
 
+    if(wf == NULL){
+        // file open error
+        return -1;
+    }
+
     // make wave header
     fputc('R', wf);
     fputc('I', wf);
@@ -37,7 +42,7 @@ int64_t WaveWriter::WriteHeader()
     // printf("ceil(%lu): %lu\n",(int64_t)len, (int64_t)ceil(len / (double)BlockBytes));
     // printf("datasize: %lu\n", datasize);
     int64_t filesize = datasize + 8 + 28;
-    write4bytes(wf, (int64_t)filesize);
+    write4bytes(wf, (int)filesize);
     fputc('W', wf);
     fputc('A', wf);
     fputc('V', wf);
@@ -46,7 +51,7 @@ int64_t WaveWriter::WriteHeader()
     fputc('m', wf);
     fputc('t', wf);
     fputc(' ', wf);
-    write4bytes(wf, (int64_t)16);
+    write4bytes(wf, (int)16);
     if (outputbit == 32 || outputbit == 64)
     {
         write2bytes(wf, (unsigned short)format.type);
@@ -56,8 +61,8 @@ int64_t WaveWriter::WriteHeader()
         write2bytes(wf, (unsigned short)1);
     }
     write2bytes(wf, (unsigned short)channels);
-    write4bytes(wf, (int64_t)outsampling);
-    write4bytes(wf, (int64_t)outsampling * channels * outputbit / 8);
+    write4bytes(wf, (int)outsampling);
+    write4bytes(wf, (int)outsampling * channels * outputbit / 8);
     write2bytes(wf, (unsigned short)channels * outputbit / 8);
     write2bytes(wf, (unsigned short)outputbit);
     fputc('d', wf);
@@ -71,6 +76,12 @@ int64_t WaveWriter::WriteHeader()
 
 int64_t WaveWriter::WriteWave(double ***in, int64_t totalsize, int64_t *wrote_size)
 {
+    // file open check
+    if(wf == NULL){
+        return -1;
+    }
+
+
     int64_t datasize = (format.samples) * (format.bytepersample);
 
     int64_t pCounter = 0;
@@ -82,11 +93,15 @@ int64_t WaveWriter::WriteWave(double ***in, int64_t totalsize, int64_t *wrote_si
 
     int channels = format.channels;
     int bytes_per_sample = format.bytepersample;
-    int outputbit = bytes_per_sample * 8 / channels;
+    int outputbit = bytes_per_sample * 8;
 
     int64_t writesize = blocksize;
 
     int64_t wrote_tmp = *wrote_size;
+
+    printf("type: %d\n", format.type);
+    printf("bit: %d\n", outputbit);
+    printf("channels: %d\n", channels);
 
     // double dither_size = static_cast<double>(dither_size_128);
 
@@ -153,6 +168,7 @@ int64_t WaveWriter::WriteWave(double ***in, int64_t totalsize, int64_t *wrote_si
                     }
                     else
                     {
+                        //printf("check1: ch=%d, pos=%d\n", iChannel, write_count);
                         doubleResult = (*in)[iChannel][write_count];
                     }
                 }
@@ -409,15 +425,16 @@ int64_t WaveWriter::WriteWave(double ***in, int64_t totalsize, int64_t *wrote_si
             }
         } // for(channels)
 
-        *wrote_size++;
+        (*wrote_size)++;
         write_count++;
 
-    } // for(blocksize)
+    } // while(blocksize)
 
     if (format.type == 3)
     {
         if (outputbit == 64)
         {
+            //printf("check2\n");
             fwrite(Doubledata, 1, WriteBufferPointer * sizeof(double), wf);
         }
         else

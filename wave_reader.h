@@ -65,6 +65,7 @@ class WaveReader{
         int64_t GetSamples();
         int64_t GetChannels();
         int64_t GetBytePerSample();
+        int GetFreq();
 
         double **wave;
 };

@@ -35,14 +35,17 @@ int main(int argc, char *argv[])
             }
         }
 
-        if(strcmp(argv[i], "--test") == 0){
+        if (strcmp(argv[i], "--test") == 0)
+        {
             option_test = 1;
             continue;
         }
 
-        if( strcmp(argv[i], "-d" ) == 0 || strcmp(argv[i], "--divide") == 0){
-            if(i+1 != argc){
-                divide_num = atoi(argv[i+1]);
+        if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--divide") == 0)
+        {
+            if (i + 1 != argc)
+            {
+                divide_num = atoi(argv[i + 1]);
 
                 option_divide = 1;
 
@@ -52,9 +55,11 @@ int main(int argc, char *argv[])
             continue;
         }
 
-        if( strcmp(argv[i], "-c" ) == 0 || strcmp(argv[i], "--cat") == 0){
-            if(i+1 != argc){
-                cat_num = atoi(argv[i+1]);
+        if (strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--cat") == 0)
+        {
+            if (i + 1 != argc)
+            {
+                cat_num = atoi(argv[i + 1]);
 
                 option_cat = 1;
 
@@ -77,24 +82,29 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if(option_test == 1){
+    if (option_test == 1)
+    {
         ::testing::InitGoogleTest(&argc, argv);
 
         return RUN_ALL_TESTS();
     }
 
-    if(option_divide == 1){
+    if (option_divide == 1)
+    {
         // divide mode
-        if(divide_num == 0){
+        if (divide_num == 0)
+        {
             show_usage();
 
             return 1;
         }
 
-        if(divide_num == 2 || divide_num == 4 || divide_num == 8){
+        if (divide_num == 2 || divide_num == 4 || divide_num == 8)
+        {
             // support 2 or 4 or 8
-            
-        } else {
+        }
+        else
+        {
             // no support
             show_usage();
             return 1;
@@ -116,54 +126,108 @@ int main(int argc, char *argv[])
     int64_t out_channels;
     int64_t out_samples;
 
-    // create buffer
-    double** in;
-    double** out;
+    WaveDivider *divider = NULL;
 
-    if(option_divide == 1){
-        WaveDivider* divider = new WaveDivider(divide_num, samples, channels); 
+    // create buffer
+    double **in;
+    double **out;
+
+    if (option_divide == 1)
+    {
+        divider = new WaveDivider(divide_num, samples, channels);
         divider->Calc();
         out_channels = divider->OutputChannels();
-        out_samples  = divider->OutputSamples();
-
-        delete divider;
+        out_samples = divider->OutputSamples();
 
         // input buffer
         in = WaveReader::CreateBuffer(channels, samples);
         out = WaveReader::CreateBuffer(out_channels, out_samples);
     }
-    
-    //display variable
+
+    // display variable
     printf("input samples:  %d\n", samples);
     printf("output samples: %d\n", out_samples);
 
     int count = 0;
 
-    while(loaded_size < datalen){
+    // read file
+    while (loaded_size < datalen)
+    {
         int64_t load_size = reader->Load();
         int64_t loaded_samples = loaded_size / reader->GetBytePerSample();
         int64_t load_samples = load_size / reader->GetBytePerSample();
         loaded_size += load_size;
 
         // process
-        for(int i=0;i<channels;i++){
+        // load wave
+        for (int i = 0; i < channels; i++)
+        {
             memcpy(&in[i][loaded_samples], reader->wave[i], sizeof(double) * load_samples);
         }
 
         count++;
     }
 
-    delete reader;
+    // process
+    divider->Divide(in, out);
 
-    for(int i=0;i<100;i++){
-        printf("%3.14lf\n",in[0][i*400]);
+    // write buffer
+    WaveFormat write_format;
+
+    write_format.bytepersample = 8; // 64bit float
+    write_format.channels = out_channels;
+    write_format.freq = reader->GetFreq();
+    write_format.samples = out_samples;
+    write_format.type = 3; // float
+
+    printf("freq: %d\n", write_format.freq);
+
+    int64_t write_datalen = 8 * out_channels * out_samples;
+    write_format.datalen = write_datalen;
+    int code = 0;
+
+    WaveWriter *writer = new WaveWriter(outfile, write_format, blocksize);
+
+    int header_result = writer->WriteHeader();
+
+    if (header_result == -1)
+    {
+        // file open error
+        code = 1;
     }
 
+    int64_t written_size = 0;
+
+    if (code == 0)
+    {
+        while (written_size < out_samples)
+        {
+            int64_t write_size = blocksize;
+
+            //printf("written_size: %d\n", written_size);
+
+            writer->WriteWave(&out, out_samples, &written_size);
+        }
+    }
+
+    delete reader;
+    delete writer;
+
+    // display variable
+    /*
+    for(int i=0;i<100;i++){
+        printf("%3.14lf\n",in[0][samples / 2 + 1 + i*100]);
+        printf("%3.14lf\n",out[1][i*100]);
+    }
+    */
+
     // release memory
-    if(option_divide == 1){
+    if (option_divide == 1)
+    {
+        delete divider;
         WaveReader::FreeBuffer(channels, in);
         WaveReader::FreeBuffer(out_channels, out);
     }
 
-    return 0;
+    return code;
 }

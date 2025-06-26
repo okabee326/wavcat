@@ -2,6 +2,7 @@
 #define __WAVCAT_H__
 
 #include "wave_reader.h"
+#include "wave_writer.h"
 
 class WaveDividerBase{
     protected:
