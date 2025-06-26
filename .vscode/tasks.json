@@ -1,0 +1,32 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "addTest",
+			"command": "g++-14",
+			"args": [
+				"wavcat.cpp",
+				"wave_reader.cpp",
+				"wave_divider.cpp",
+				"wave_writer.cpp",
+				"test_wave_reader.cc",
+				"test_wave_divider.cc",
+				"-g",
+				"-pthread",
+				"-lgtest_main",
+				"-lgtest",
+				"-I",
+				"/usr/local/include",
+				"-L",
+				"/usr/local/lib",
+				"-o",
+				"wavcat"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		}
+	]
+}
