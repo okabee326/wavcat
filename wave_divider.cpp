@@ -41,6 +41,8 @@ void WaveDivider::Calc()
         output_samples++;
     }
 
+    //printf("%d -> %d\n", samples, output_samples);
+
     output_channels = channels * divide_num;
     output_remind = remind;
 }

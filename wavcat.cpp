@@ -44,6 +44,8 @@ int main(int argc, char *argv[])
             if(i+1 != argc){
                 divide_num = atoi(argv[i+1]);
 
+                option_divide = 1;
+
                 i++;
             }
 
@@ -53,6 +55,8 @@ int main(int argc, char *argv[])
         if( strcmp(argv[i], "-c" ) == 0 || strcmp(argv[i], "--cat") == 0){
             if(i+1 != argc){
                 cat_num = atoi(argv[i+1]);
+
+                option_cat = 1;
 
                 i++;
             }
@@ -113,30 +117,53 @@ int main(int argc, char *argv[])
     int64_t out_samples;
 
     // create buffer
+    double** in;
+    double** out;
+
     if(option_divide == 1){
-        WaveDivider* divider = new WaveDivider(divide_num, channels, samples); 
+        WaveDivider* divider = new WaveDivider(divide_num, samples, channels); 
         divider->Calc();
         out_channels = divider->OutputChannels();
         out_samples  = divider->OutputSamples();
 
         delete divider;
+
+        // input buffer
+        in = WaveReader::CreateBuffer(channels, samples);
+        out = WaveReader::CreateBuffer(out_channels, out_samples);
     }
     
-
+    //display variable
+    printf("input samples:  %d\n", samples);
+    printf("output samples: %d\n", out_samples);
 
     int count = 0;
 
     while(loaded_size < datalen){
         int64_t load_size = reader->Load();
+        int64_t loaded_samples = loaded_size / reader->GetBytePerSample();
+        int64_t load_samples = load_size / reader->GetBytePerSample();
         loaded_size += load_size;
 
         // process
-
+        for(int i=0;i<channels;i++){
+            memcpy(&in[i][loaded_samples], reader->wave[i], sizeof(double) * load_samples);
+        }
 
         count++;
     }
 
     delete reader;
+
+    for(int i=0;i<100;i++){
+        printf("%3.14lf\n",in[0][i*400]);
+    }
+
+    // release memory
+    if(option_divide == 1){
+        WaveReader::FreeBuffer(channels, in);
+        WaveReader::FreeBuffer(out_channels, out);
+    }
 
     return 0;
 }

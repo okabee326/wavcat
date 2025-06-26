@@ -109,6 +109,30 @@ int64_t WaveReader::GetChannels(){
     return format.channels;
 }
 
+int64_t WaveReader::GetBytePerSample(){
+    return format.bytepersample;
+}
+
+double** WaveReader::CreateBuffer(int ch, int64_t size){
+    double** out = (double **)malloc(sizeof(double *) * ch);
+    for (int i = 0; i < ch; i++)
+    {
+        out[i] = (double *)malloc(sizeof(double) * size);
+        memset(out[i], 0, sizeof(double) * size);
+    }
+
+    return out;
+}
+
+void WaveReader::FreeBuffer(int ch, double** buf){
+    for (int i = 0; i < ch; i++)
+    {
+        free(buf[i]);
+    }
+    free(buf);
+}
+
+
 int64_t WaveReader::Load(){
     int64_t size = LoadWave(0, 0);
 

@@ -55,11 +55,16 @@ class WaveReader{
 
         int Init(char* filename);
         int End();
+
+        static double** CreateBuffer(int ch, int64_t size);
+        static void FreeBuffer(int ch, double** buf);
+
         int64_t Load();
         int64_t GetBufferSize();
         int64_t GetDataLen();
         int64_t GetSamples();
         int64_t GetChannels();
+        int64_t GetBytePerSample();
 
         double **wave;
 };
