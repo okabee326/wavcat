@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
         {
             if (i + 1 != argc)
             {
-                cat_num = atoi(argv[i + 1]);
+                divide_num = atoi(argv[i + 1]);
 
                 option_cat = 1;
 
@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
         return RUN_ALL_TESTS();
     }
 
-    if (option_divide == 1)
+    if (option_divide == 1 || option_cat == 1)
     {
         // divide mode
         if (divide_num == 0)
@@ -126,7 +126,10 @@ int main(int argc, char *argv[])
     int64_t out_channels;
     int64_t out_samples;
 
+    //printf("%d, %d, %d\n", divide_num, samples, channels);
+
     WaveDivider *divider = NULL;
+    WaveCatenater *catenater = NULL;
 
     // create buffer
     double **in;
@@ -138,6 +141,17 @@ int main(int argc, char *argv[])
         divider->Calc();
         out_channels = divider->OutputChannels();
         out_samples = divider->OutputSamples();
+
+        // input buffer
+        in = WaveReader::CreateBuffer(channels, samples);
+        out = WaveReader::CreateBuffer(out_channels, out_samples);
+    }
+
+    if(option_cat == 1){
+        catenater = new WaveCatenater(divide_num, samples, channels);
+        catenater->Calc();
+        out_channels = catenater->OutputChannels();
+        out_samples = catenater->OutputSamples();
 
         // input buffer
         in = WaveReader::CreateBuffer(channels, samples);
@@ -169,7 +183,13 @@ int main(int argc, char *argv[])
     }
 
     // process
-    divider->Divide(in, out);
+    if(option_divide == 1){
+        divider->Divide(in, out);
+    }
+    
+    if(option_cat == 1){
+        catenater->Catenate(in, out);
+    }
 
     // write buffer
     WaveFormat write_format;
@@ -202,10 +222,6 @@ int main(int argc, char *argv[])
     {
         while (written_size < out_samples)
         {
-            int64_t write_size = blocksize;
-
-            //printf("written_size: %d\n", written_size);
-
             writer->WriteWave(&out, out_samples, &written_size);
         }
     }
@@ -225,6 +241,12 @@ int main(int argc, char *argv[])
     if (option_divide == 1)
     {
         delete divider;
+        WaveReader::FreeBuffer(channels, in);
+        WaveReader::FreeBuffer(out_channels, out);
+    }
+
+    if(option_cat == 1){
+        delete catenater;
         WaveReader::FreeBuffer(channels, in);
         WaveReader::FreeBuffer(out_channels, out);
     }

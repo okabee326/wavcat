@@ -99,16 +99,16 @@ int64_t WaveWriter::WriteWave(double ***in, int64_t totalsize, int64_t *wrote_si
 
     int64_t wrote_tmp = *wrote_size;
 
-    printf("type: %d\n", format.type);
-    printf("bit: %d\n", outputbit);
-    printf("channels: %d\n", channels);
+    //printf("type: %d\n", format.type);
+    //printf("bit: %d\n", outputbit);
+    //printf("channels: %d\n", channels);
 
     // double dither_size = static_cast<double>(dither_size_128);
 
     if (wrote_tmp + blocksize > totalsize)
     {
         writesize = totalsize - wrote_tmp;
-        printf("writesize: %lld\n", writesize);
+        //printf("writesize: %lld\n", writesize);
     }
 
     if (format.type == 1)
