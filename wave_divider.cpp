@@ -60,10 +60,13 @@ void WaveDivider::Divide(double **in, double **out)
         {
             int64_t copysize = output_samples;
 
+
             if ((i + 1) * output_samples > samples)
             {
                 copysize = samples - i * output_samples;
             }
+
+            //printf("%d:%d => %ld\n", c, i, copysize);
 
             memcpy(out[c * divide_num + i], &in[c][i * output_samples], sizeof(double) * copysize);
         }

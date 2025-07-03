@@ -138,7 +138,12 @@ void WaveReader::FreeBuffer(int ch, double** buf){
 
 
 int64_t WaveReader::Load(){
+    //printf("load\n");
     int64_t size = LoadWave(0, 0);
+
+    if(size == 0){
+        size = -1;
+    }
 
     return size;
 }
@@ -163,6 +168,7 @@ WaveReader::WaveReader(int _blocksize)
 {
     blocksize = _blocksize;
     wave = NULL;
+    loaded_size = 0;
 }
 
 WaveReader::~WaveReader()
@@ -271,7 +277,8 @@ int64_t WaveReader::LoadWave(unsigned int optional_size, int option_peakcheck)
     int type = format.type;
     int channels = format.channels;
 
-    int byte_per_samples = format.bytepersample;
+    int byte_per_samples = (int)format.bytepersample;
+    int bit = byte_per_samples / channels * 8;
 
     int64_t load_samples = blocksize;
     int64_t load_size = blocksize * byte_per_samples;
@@ -281,10 +288,16 @@ int64_t WaveReader::LoadWave(unsigned int optional_size, int option_peakcheck)
 
     memset(p, 0, sizeof(unsigned char) * load_size);
 
+    //printf("len: %ld\n", len);
+    //printf("blocksize: %d\n", blocksize);
+    //printf("load_size: %d\n", (int)load_size);
+    //printf("loaded_size: %d\n", (int)loaded_size);
+
     if (loaded_size + load_size > len)
     {
         load_size = len - loaded_size;
     }
+
 
     if (load_size > 0)
     {
@@ -325,7 +338,7 @@ int64_t WaveReader::LoadWave(unsigned int optional_size, int option_peakcheck)
             if (type != 3)
             {
                 // 16bit
-                if (byte_per_samples == 4)
+                if (bit == 16)
                 {
                     L = *(p + pCounter + 0 + 0 + c * byte_per_samples / channels); // read actual data
                     M = *(p + pCounter + 1 + c * byte_per_samples / channels);
@@ -347,7 +360,7 @@ int64_t WaveReader::LoadWave(unsigned int optional_size, int option_peakcheck)
                     }
                 }
                 // 24bit
-                if (byte_per_samples == 6)
+                if (bit == 24)
                 {
                     L = *(p + pCounter + 0 + c * byte_per_samples / channels); // read actual data
                     M = *(p + pCounter + 1 + c * byte_per_samples / channels);
@@ -372,7 +385,7 @@ int64_t WaveReader::LoadWave(unsigned int optional_size, int option_peakcheck)
                     }
                 }
                 // 32bit integer
-                if (byte_per_samples == 8)
+                if (bit == 32)
                 {
                     L = *(p + pCounter + 0 + c * byte_per_samples / channels); // read actual data
                     M = *(p + pCounter + 1 + c * byte_per_samples / channels);
@@ -398,7 +411,7 @@ int64_t WaveReader::LoadWave(unsigned int optional_size, int option_peakcheck)
                     }
                 }
                 // 64bit integer
-                if (byte_per_samples == 16)
+                if (bit == 64)
                 {
                     PCMvalue = *((int64_t *)(p + pCounter + c * byte_per_samples / channels));
 
@@ -435,12 +448,12 @@ int64_t WaveReader::LoadWave(unsigned int optional_size, int option_peakcheck)
             else
             {
                 // 32bit float
-                if (byte_per_samples == 8)
+                if (bit == 32)
                 {
                     signal = *((float *)(p + pCounter + c * byte_per_samples / channels));
                 }
                 // 64bit float
-                if (byte_per_samples == 16)
+                if (bit == 64)
                 {
                     signal = *((double *)(p + pCounter + c * byte_per_samples / channels));
                 }
@@ -448,6 +461,7 @@ int64_t WaveReader::LoadWave(unsigned int optional_size, int option_peakcheck)
 
             wave[c][count] = signal;
             // printf("%f\n", wave[c][count]);
+            //printf("%ld\n", count);
         }
 
         pCounter += byte_per_samples;
@@ -532,7 +546,7 @@ int writeWave(FILE *wf, double ***in, int64_t blocksize, int64_t totalsize, int6
     if (wrote_tmp + blocksize > totalsize + addtional_samples)
     {
         writesize = totalsize + addtional_samples - wrote_tmp;
-        printf("writesize: %lld\n", writesize);
+        printf("writesize: %ld\n", writesize);
     }
 
     if (type == 1)

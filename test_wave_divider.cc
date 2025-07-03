@@ -92,6 +92,8 @@ TEST(TestWaveDivider, TestWaveDivide)
         in[0][i] = (double)i;
     }
 
+    //printf("point1\n");
+
     out = (double **)malloc(sizeof(double *) * channels * divide_num);
     for (int i = 0; i < divider->OutputChannels(); i++)
     {
@@ -104,6 +106,8 @@ TEST(TestWaveDivider, TestWaveDivide)
         out2[i] = (double*)malloc(sizeof(double) * cater->OutputSamples() );
         memset(out2[i], 0, sizeof(double) * cater->OutputSamples() );
     }
+
+    //printf("point2\n");
 
     // test code
     // divide
@@ -127,6 +131,7 @@ TEST(TestWaveDivider, TestWaveDivide)
     */
 
     // release memory
+    /*
     for (int i = 0; i < channels; i++)
     {
         free(in[i]);
@@ -143,6 +148,7 @@ TEST(TestWaveDivider, TestWaveDivide)
         free(out2[i]);
     }
     free(out2);
+    */
 
     delete divider;
     delete cater;

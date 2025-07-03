@@ -13,7 +13,7 @@ class WaveWriter {
         WaveWriter(std::string filename, WaveFormat format, int64_t blocksize);
         ~WaveWriter();
         int64_t WriteHeader();
-        int64_t WriteWave(double*** in, int64_t totalsize, int64_t* wrote_size);
+        int64_t WriteWave(double*** in, int64_t totalsize, int64_t pos, int64_t* wrote_size);
 };
 
 #endif // __WAVE_WRITER_H__

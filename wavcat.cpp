@@ -123,6 +123,9 @@ int main(int argc, char *argv[])
             show_usage();
             return 1;
         }
+    } else {
+        show_usage();
+        return 1;
     }
 
     // load wave file
@@ -181,8 +184,8 @@ int main(int argc, char *argv[])
     }
 
     // display variable
-    printf("input samples:  %d\n", samples);
-    printf("output samples: %d\n", out_samples);
+    printf("input samples:  %ld\n", samples);
+    printf("output samples: %ld\n", out_samples);
 
     int count = 0;
 
@@ -190,27 +193,43 @@ int main(int argc, char *argv[])
     while (loaded_size < datalen)
     {
         int64_t load_size = reader->Load();
+
+        if(load_size == -1){
+            printf("error\n");
+            return 1;
+        }
+
         int64_t loaded_samples = loaded_size / reader->GetBytePerSample();
         int64_t load_samples = load_size / reader->GetBytePerSample();
         loaded_size += load_size;
+
+        //printf("%ld / %ld\n", load_size, loaded_size);
 
         // process
         // load wave
         for (int i = 0; i < channels; i++)
         {
             memcpy(&in[i][loaded_samples], reader->wave[i], sizeof(double) * load_samples);
+
+            //printf("%3.14f\n", reader->wave[i][0]);
         }
 
         count++;
     }
 
+    //printf("aaa\n");
+
     // process
     if(option_divide == 1 || option_verification == 1){
         divider->Divide(in, out);
+
+        //printf("%3.14f\n", out[2][0]);
     }
     
     if(option_cat == 1){
         catenater->Catenate(in, out);
+        //printf("%3.14f\n", in[2][0]);
+        //printf("%3.14f\n", out[1][0]);
     }
 
     if(option_verification == 1){
@@ -244,9 +263,12 @@ int main(int argc, char *argv[])
 
     if (code == 0)
     {
+        int count = 0;
         while (written_size < out_samples)
         {
-            writer->WriteWave(&out, out_samples, &written_size);
+            writer->WriteWave(&out, out_samples, count, &written_size);
+
+            count += blocksize;
         }
     }
 

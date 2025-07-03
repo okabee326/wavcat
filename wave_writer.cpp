@@ -74,7 +74,7 @@ int64_t WaveWriter::WriteHeader()
     return 0;
 }
 
-int64_t WaveWriter::WriteWave(double ***in, int64_t totalsize, int64_t *wrote_size)
+int64_t WaveWriter::WriteWave(double ***in, int64_t totalsize, int64_t pos, int64_t *wrote_size)
 {
     // file open check
     if(wf == NULL){
@@ -155,7 +155,7 @@ int64_t WaveWriter::WriteWave(double ***in, int64_t totalsize, int64_t *wrote_si
                 }
                 else
                 {
-                    oneResult = (float)(*in)[iChannel][write_count];
+                    oneResult = (float)(*in)[iChannel][write_count + pos];
                 }
             }
             else
@@ -169,7 +169,7 @@ int64_t WaveWriter::WriteWave(double ***in, int64_t totalsize, int64_t *wrote_si
                     else
                     {
                         //printf("check1: ch=%d, pos=%d\n", iChannel, write_count);
-                        doubleResult = (*in)[iChannel][write_count];
+                        doubleResult = (*in)[iChannel][write_count + pos];
                     }
                 }
             }
@@ -194,7 +194,7 @@ int64_t WaveWriter::WriteWave(double ***in, int64_t totalsize, int64_t *wrote_si
                     {
                         double val;
 
-                        val = (*in)[iChannel][write_count];
+                        val = (*in)[iChannel][write_count + pos];
 
                         if (val < 0.0)
                         {
@@ -241,7 +241,7 @@ int64_t WaveWriter::WriteWave(double ***in, int64_t totalsize, int64_t *wrote_si
                     }
                     else
                     {
-                        double val = (*in)[iChannel][write_count];
+                        double val = (*in)[iChannel][write_count + pos];
 
                         // negative
                         if (val < 0.0)
@@ -303,7 +303,7 @@ int64_t WaveWriter::WriteWave(double ***in, int64_t totalsize, int64_t *wrote_si
                     }
                     else
                     {
-                        double val = (*in)[iChannel][write_count];
+                        double val = (*in)[iChannel][write_count + pos];
                         
                         val = val;
 
@@ -363,7 +363,7 @@ int64_t WaveWriter::WriteWave(double ***in, int64_t totalsize, int64_t *wrote_si
                     {
                         double val;
 
-                        val = (*in)[iChannel][write_count];
+                        val = (*in)[iChannel][write_count + pos];
 
                         if (val < 0.0)
                         {
