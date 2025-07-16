@@ -1,6 +1,8 @@
 #include "wavcat.h"
 
+#ifndef __PRODUCTION__
 #include <gtest/gtest.h>
+#endif
 
 void show_usage()
 {
@@ -36,11 +38,13 @@ int main(int argc, char *argv[])
             }
         }
 
+        #ifndef __PRODUCTION__
         if (strcmp(argv[i], "--test") == 0)
         {
             option_test = 1;
             continue;
         }
+        #endif
 
         if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--divide") == 0)
         {
@@ -96,12 +100,14 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    #ifndef __PRODUCTION__
     if (option_test == 1)
     {
         ::testing::InitGoogleTest(&argc, argv);
 
         return RUN_ALL_TESTS();
     }
+    #endif
 
     if (option_divide == 1 || option_cat == 1 || option_verification == 1)
     {
