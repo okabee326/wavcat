@@ -3,6 +3,7 @@
 
 #include "wave_reader.h"
 #include "wave_writer.h"
+#include "wave_compare.h"
 
 class WaveDividerBase{
     protected:

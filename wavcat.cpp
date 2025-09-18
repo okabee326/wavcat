@@ -13,11 +13,13 @@ int main(int argc, char *argv[])
 {
     char *infile = NULL;
     char *outfile = NULL;
+    char* diff_file = NULL;
 
     int option_divide = 0;
     int option_cat = 0;
     int option_test = 0;
     int option_verification = 0;
+    int option_compare = 0;
 
     int divide_num = 0;
     int cat_num = 0;
@@ -74,6 +76,19 @@ int main(int argc, char *argv[])
             continue;
         }
 
+        if (strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "--compare") == 0){
+            if (i + 1 != argc)
+            {
+                option_compare = 1;
+
+                diff_file = argv[i + 1];
+
+                i++;
+            }
+
+            continue;
+        }
+
         if(strcmp(argv[i], "--veri") == 0){
             if (i + 1 != argc)
             {
@@ -119,23 +134,43 @@ int main(int argc, char *argv[])
             return 1;
         }
 
-        if (divide_num == 2 || divide_num == 4 || divide_num == 8)
-        {
-            // support 2 or 4 or 8
+        int div_tmp = divide_num;
+        int div_count = 1;
+
+        while(div_tmp > 1){
+            div_tmp = div_tmp / 2;
+            div_count *= 2;
         }
-        else
-        {
-            // no support
-            show_usage();
-            return 1;
-        }
+
+        divide_num = div_count;
+
+        //printf("divide_num: %d\n", divide_num);
+
+        
     } else {
         show_usage();
         return 1;
     }
 
-    // load wave file
     int blocksize = 32768;
+
+    if(option_compare == 1){
+        printf("compare mode\n");
+
+        WaveCompare *compare = new WaveCompare(infile, outfile, diff_file);
+
+        // char *infile = NULL;
+        //char *outfile = NULL;
+        //std::string diff_file = "";    
+        
+        compare->Compare();
+
+        delete compare;
+
+        return 0;
+    }
+
+    // load wave file
     int64_t loaded_size = 0;
 
     WaveReader *reader = new WaveReader(blocksize);
@@ -153,6 +188,7 @@ int main(int argc, char *argv[])
 
     WaveDivider *divider = NULL;
     WaveCatenater *catenater = NULL;
+    WaveCompare *compare = NULL;
 
     // create buffer
     double **in;
@@ -209,33 +245,23 @@ int main(int argc, char *argv[])
         int64_t load_samples = load_size / reader->GetBytePerSample();
         loaded_size += load_size;
 
-        //printf("%ld / %ld\n", load_size, loaded_size);
-
         // process
         // load wave
         for (int i = 0; i < channels; i++)
         {
             memcpy(&in[i][loaded_samples], reader->wave[i], sizeof(double) * load_samples);
-
-            //printf("%3.14f\n", reader->wave[i][0]);
         }
 
         count++;
     }
 
-    //printf("aaa\n");
-
     // process
     if(option_divide == 1 || option_verification == 1){
         divider->Divide(in, out);
-
-        //printf("%3.14f\n", out[2][0]);
     }
     
     if(option_cat == 1){
         catenater->Catenate(in, out);
-        //printf("%3.14f\n", in[2][0]);
-        //printf("%3.14f\n", out[1][0]);
     }
 
     if(option_verification == 1){
@@ -287,14 +313,6 @@ int main(int argc, char *argv[])
 
     delete reader;
     delete writer;
-
-    // display variable
-    /*
-    for(int i=0;i<100;i++){
-        printf("%3.14lf\n",in[0][samples / 2 + 1 + i*100]);
-        printf("%3.14lf\n",out[1][i*100]);
-    }
-    */
 
     // release memory
     if (option_divide == 1 || option_verification == 1)

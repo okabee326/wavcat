@@ -10,6 +10,7 @@
 				"wave_reader.cpp",
 				"wave_divider.cpp",
 				"wave_writer.cpp",
+				"wave_compare.cpp",
 				"test_wave_reader.cc",
 				"test_wave_divider.cc",
 				"-g",
