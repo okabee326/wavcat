@@ -105,12 +105,14 @@ int main(int argc, char *argv[])
 
     if (infile == NULL)
     {
+        printf("no input file\n");
         show_usage();
         return 1;
     }
 
     if (outfile == NULL)
     {
+        printf("no output file\n");
         show_usage();
         return 1;
     }
@@ -129,6 +131,7 @@ int main(int argc, char *argv[])
         // divide mode
         if (divide_num == 0)
         {
+            printf("divide_num = 0\n");
             show_usage();
 
             return 1;
@@ -144,16 +147,19 @@ int main(int argc, char *argv[])
 
         divide_num = div_count;
 
-        //printf("divide_num: %d\n", divide_num);
+        printf("divide_num: %d\n", divide_num);
 
         
-    } else {
+    } 
+
+    if(option_divide != 1 && option_cat != 1 && option_verification != 1 && option_compare != 1){
         show_usage();
         return 1;
     }
 
     int blocksize = 32768;
 
+    // in compare mode, main routine is compare->Compare()
     if(option_compare == 1){
         printf("compare mode\n");
 

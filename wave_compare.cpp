@@ -75,19 +75,29 @@ int WaveCompare::Compare(){
 
     int byte_per_sample = reader1->GetBytePerSample();
 
+    // load all wave data
     while (loaded_size < datalen){
-        int64_t load_size = reader1->Load() / byte_per_sample;
+        // load wave data
+        int64_t load_size = reader1->Load();
         reader2->Load();
 
+        printf("load_size: %d\n", load_size);
+
+        // calculate diff
         for(int c=0;c<channels;c++){
             for(int i=0;i<blocksize;i++){
                 data_diff[c][i] = reader1->wave[c][i] - reader2->wave[c][i];
             }
         }
 
-        printf("%3.14f, %3.14f", data_diff[0][0], data_diff[0][100]);
+        for(int j=0;j<blocksize;j++){
+            printf("%3.14f\n", data_diff[0][j]);
+        }
 
         loaded_size += load_size;
+
+        printf("%d / %d\n", loaded_size, datalen);
+
     }
 
     return 0;
